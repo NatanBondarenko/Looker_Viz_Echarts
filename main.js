@@ -22,18 +22,24 @@ looker.plugins.visualizations.add({
 
     // Define the drawChart function
     function drawChart() {
-      // Set the data
-      var data = google.visualization.arrayToDataTable([
-        ['Price', 'Size'],
-        [50, 7], [60, 8], [70, 8], [80, 9], [90, 9], [100, 9],
-        [110, 10], [120, 11], [130, 14], [140, 14], [150, 15]
-      ]);
+      // Get the Looker query result data
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Dimension');
+      data.addColumn('number', 'Measure');
+
+      // Extract the data from Looker query response
+      var rows = queryResponse['data']['rows'];
+      for (var i = 0; i < rows.length; i++) {
+        var dimension = rows[i]['dimension']['value'];
+        var measure = rows[i]['measure']['value'];
+        data.addRow([dimension, measure]);
+      }
 
       // Set the options
       var options = {
         title: 'House Prices vs Size',
-        hAxis: { title: 'Square Meters' },
-        vAxis: { title: 'Price in Millions' },
+        hAxis: { title: 'Dimension' },
+        vAxis: { title: 'Measure' },
         legend: 'none'
       };
 
