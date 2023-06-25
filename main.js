@@ -1,44 +1,68 @@
-import { Visualization, LookerCharts } from '@looker/looker-charts';
-import { select } from 'd3-selection';
-import Chart from 'chart.js';
+looker.plugins.visualizations.add({
+  create: function(element, config) {
+    // Step 1) Load D3.js
+    var d3Script = document.createElement('script');
+    d3Script.src = 'https://d3js.org/d3.v6.min.js';
+    document.head.appendChild(d3Script);
 
-export default class DoughnutChart extends Visualization {
-  constructor(element, config, queryResponse) {
-    super(element, config, queryResponse);
-  }
+    // Step 2) Load billboard.js with style
+    var billboardScript = document.createElement('script');
+    billboardScript.src = '$YOUR_PATH/billboard.js';
+    document.head.appendChild(billboardScript);
 
-  async initialize() {
-    await super.initialize();
-    this.element.innerHTML = '<canvas id="doughnutChart" width="400" height="400"></canvas>';
-  }
+    // Load with base style
+    var billboardCss = document.createElement('link');
+    billboardCss.rel = 'stylesheet';
+    billboardCss.href = '$YOUR_PATH/billboard.css';
+    document.head.appendChild(billboardCss);
 
-  async updateAsync(data, element, config, queryResponse) {
-    const labels = data.fields.dimension[0].data.map(row => row.formattedValue);
-    const values = data.fields.measure[0].data.map(row => row.value);
+    // Or load different theme style
+    var insightCss = document.createElement('link');
+    insightCss.rel = 'stylesheet';
+    insightCss.href = '$YOUR_PATH/theme/insight.css';
+    document.head.appendChild(insightCss);
 
-    const chartData = {
-      labels: labels,
-      datasets: [{
-        data: values,
-        backgroundColor: ['rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)'],
-      }]
+    // Step 3) Setup your chart holder
+    var chartHolder = document.createElement('div');
+    chartHolder.id = 'chart';
+    element.appendChild(chartHolder);
+
+    // Generate a chart with options
+    var chart = null;
+
+    // Return the visualization API methods
+    return {
+      updateAsync: function(data, element, config, queryResponse, details, done) {
+        if (!chart) {
+          // Create a new chart
+          chart = bb.generate({
+            bindto: '#chart',
+            data: {
+              columns: []
+            }
+          });
+        }
+
+        // Parse the Looker table data and format it for the chart
+        var formattedData = [];
+        var fields = queryResponse.fields.dimension_like.concat(queryResponse.fields.measure_like);
+        formattedData.push(fields.map(function(field) {
+          return field.label;
+        }));
+        formattedData = formattedData.concat(data.map(function(row) {
+          return fields.map(function(field) {
+            return row[field.name].value;
+          });
+        }));
+
+        // Update the chart with the new data
+        chart.load({
+          columns: formattedData
+        });
+
+        // Signal to Looker that the update is complete
+        done();
+      }
     };
-
-    const chartOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-    };
-
-    const canvas = select('#doughnutChart');
-    const ctx = canvas.node().getContext('2d');
-    new Chart(ctx, {
-      type: 'doughnut',
-      data: chartData,
-      options: chartOptions
-    });
-
-    this.done();
   }
-}
-
-looker.plugins.visualizations.add(DoughnutChart);
+});
