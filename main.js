@@ -18,16 +18,44 @@ looker.plugins.visualizations.add({
       ],
       default: 'PieChart',
     },
+    // URL or path to the CSS file
+    cssFile: {
+      label: 'CSS File URL or Path',
+      type: 'string',
+      default: '',
+    },
+    // URL or path to the Google Charts library
+    googleChartsFile: {
+      label: 'Google Charts Library URL or Path',
+      type: 'string',
+      default: '',
+    },
   },
   handleErrors: function (data, queryResponse) {
     return [];
   },
   create: function (element, config) {
-    element.innerHTML = '<style>script[src="https://www.gstatic.com/charts/loader.js"] { display: none !important; }</style><div id="myChart"></div>';
-  },
-  updateAsync: function (data, element, config, queryResponse, details, done) {
-    google.charts.load('current', { packages: ['corechart'] });
-    google.charts.setOnLoadCallback(drawChart);
+    // Load the CSS file dynamically
+    if (config.cssFile) {
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = config.cssFile;
+      element.appendChild(link);
+    }
+
+    // Load the Google Charts library dynamically
+    if (config.googleChartsFile) {
+      var script = document.createElement('script');
+      script.src = config.googleChartsFile;
+      script.onload = function () {
+        google.charts.load('current', { packages: ['corechart'] });
+        google.charts.setOnLoadCallback(drawChart);
+      };
+      element.appendChild(script);
+    } else {
+      google.charts.load('current', { packages: ['corechart'] });
+      google.charts.setOnLoadCallback(drawChart);
+    }
 
     function drawChart() {
       var dataTable = new google.visualization.DataTable();
@@ -43,8 +71,6 @@ looker.plugins.visualizations.add({
       chart.draw(dataTable, {
         title: config.title,
       });
-
-      done();
     }
   },
 });
