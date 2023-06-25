@@ -23,7 +23,7 @@ looker.plugins.visualizations.add({
     return [];
   },
   create: function (element, config) {
-    element.innerHTML = '<div id="myChart"></div>';
+    element.innerHTML = '<style>script[src="https://www.gstatic.com/charts/loader.js"] { display: none !important; }</style><div id="myChart"></div>';
   },
   updateAsync: function (data, element, config, queryResponse, details, done) {
     google.charts.load('current', { packages: ['corechart'] });
