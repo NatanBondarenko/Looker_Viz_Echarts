@@ -18,13 +18,11 @@ looker.plugins.visualizations.add({
       ],
       default: 'PieChart',
     },
-    // URL or path to the CSS file
     cssFile: {
       label: 'CSS File URL or Path',
       type: 'string',
       default: '',
     },
-    // URL or path to the Google Charts library
     googleChartsFile: {
       label: 'Google Charts Library URL or Path',
       type: 'string',
@@ -35,7 +33,6 @@ looker.plugins.visualizations.add({
     return [];
   },
   create: function (element, config) {
-    // Load the CSS file dynamically
     if (config.cssFile) {
       var link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -43,7 +40,6 @@ looker.plugins.visualizations.add({
       element.appendChild(link);
     }
 
-    // Load the Google Charts library dynamically
     if (config.googleChartsFile) {
       var script = document.createElement('script');
       script.src = config.googleChartsFile;
@@ -59,7 +55,30 @@ looker.plugins.visualizations.add({
 
     function drawChart() {
       var dataTable = new google.visualization.DataTable();
-      // Prepare your data here and populate the `dataTable` object
+
+      // Get the dimensions from Looker data table
+      var dimensions = data.fields.dimension_like;
+      dimensions.forEach(function (dimension) {
+        dataTable.addColumn('string', dimension.label);
+      });
+
+      // Get the measures from Looker data table
+      var measures = data.fields.measure_like;
+      measures.forEach(function (measure) {
+        dataTable.addColumn('number', measure.label);
+      });
+
+      // Populate the data rows
+      data.forEach(function (row) {
+        var dataRow = [];
+        dimensions.forEach(function (dimension) {
+          dataRow.push(row[dimension.name].value);
+        });
+        measures.forEach(function (measure) {
+          dataRow.push(row[measure.name].value);
+        });
+        dataTable.addRow(dataRow);
+      });
 
       var chart;
       if (config.chartType === 'PieChart') {
