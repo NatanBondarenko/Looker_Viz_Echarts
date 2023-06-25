@@ -1,48 +1,44 @@
-import * as Chart from 'chart.js';
+import { Visualization, LookerCharts } from '@looker/looker-charts';
+import { select } from 'd3-selection';
+import Chart from 'chart.js';
 
-looker.plugins.visualizations.add({
-  options: {
-    my_option: {
-      type: 'string',
-      label: 'My Option',
-      default: 'Default Value',
-    },
-  },
-  create: function(element, config) {
-    element.innerHTML = '<canvas id="doughnutChart" width="400" height="400"></canvas>';
-  },
-  updateAsync: function(data, element, config, queryResponse, details, done) {
-    const canvas = element.querySelector('#doughnutChart');
-    const ctx = canvas.getContext('2d');
+export default class DoughnutChart extends Visualization {
+  constructor(element, config, queryResponse) {
+    super(element, config, queryResponse);
+  }
+
+  async initialize() {
+    await super.initialize();
+    this.element.innerHTML = '<canvas id="doughnutChart" width="400" height="400"></canvas>';
+  }
+
+  async updateAsync(data, element, config, queryResponse) {
+    const labels = data.fields.dimension[0].data.map(row => row.formattedValue);
+    const values = data.fields.measure[0].data.map(row => row.value);
 
     const chartData = {
-      labels: data.fields.dimensions[0].values,
-      datasets: [
-        {
-          data: data.fields.measure_like[0].value,
-          backgroundColor: [
-            'rgba(255, 99, 132, 0.7)',
-            'rgba(54, 162, 235, 0.7)',
-            'rgba(255, 206, 86, 0.7)',
-            'rgba(75, 192, 192, 0.7)',
-            'rgba(153, 102, 255, 0.7)',
-          ],
-        },
-      ],
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: ['rgba(255, 99, 132, 0.7)', 'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)'],
+      }]
     };
 
     const chartOptions = {
       responsive: true,
       maintainAspectRatio: false,
-      // Add more options as needed for customization
     };
 
+    const canvas = select('#doughnutChart');
+    const ctx = canvas.node().getContext('2d');
     new Chart(ctx, {
       type: 'doughnut',
       data: chartData,
-      options: chartOptions,
+      options: chartOptions
     });
 
-    done();
-  },
-});
+    this.done();
+  }
+}
+
+looker.plugins.visualizations.add(DoughnutChart);
