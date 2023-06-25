@@ -25,26 +25,28 @@ looker.plugins.visualizations.add({
     element.innerHTML = '<div id="myChart"></div>';
   },
   updateAsync: function (data, element, config, queryResponse, details, done) {
-    google.charts.load('current', { packages: ['corechart'] });
-    google.charts.setOnLoadCallback(drawChart);
+    var dimensionIndex = queryResponse.fields.dimensions.findIndex(function (field) {
+      return field.name === config.dimension;
+    });
+    var measureIndex = queryResponse.fields.measures.findIndex(function (field) {
+      return field.name === config.measure;
+    });
 
-    function drawChart() {
-      var dataTable = new google.visualization.DataTable();
-      dataTable.addColumn('string', config.dimension);
-      dataTable.addColumn('number', config.measure);
+    var dataTable = new google.visualization.DataTable();
+    dataTable.addColumn('string', config.dimension);
+    dataTable.addColumn('number', config.measure);
 
-      data.forEach(function (row) {
-        var dimensionValue = row[config.dimension].value;
-        var measureValue = parseFloat(row[config.measure].value);
-        dataTable.addRow([dimensionValue, measureValue]);
-      });
+    data.forEach(function (row) {
+      var dimensionValue = row[dimensionIndex].rendered || row[dimensionIndex].value;
+      var measureValue = parseFloat(row[measureIndex].value);
+      dataTable.addRow([dimensionValue, measureValue]);
+    });
 
-      var chart = new google.visualization.PieChart(element.querySelector('#myChart'));
-      chart.draw(dataTable, {
-        title: config.title,
-      });
+    var chart = new google.visualization.PieChart(element.querySelector('#myChart'));
+    chart.draw(dataTable, {
+      title: config.title,
+    });
 
-      done();
-    }
+    done();
   },
 });
