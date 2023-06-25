@@ -7,10 +7,16 @@ looker.plugins.visualizations.add({
 
     // Step 2) Load billboard.js with style
     var billboardScript = document.createElement('script');
-    billboardScript.src = 'https://cdnjs.com/libraries/billboard.js';
+    billboardScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/billboard.js/1.14.4/billboard.min.js';
     document.head.appendChild(billboardScript);
 
-        // Step 3) Setup your chart holder
+    // Load billboard.css
+    var billboardCss = document.createElement('link');
+    billboardCss.rel = 'stylesheet';
+    billboardCss.href = 'https://cdnjs.cloudflare.com/ajax/libs/billboard.js/1.14.4/billboard.min.css';
+    document.head.appendChild(billboardCss);
+
+    // Step 3) Setup your chart holder
     var chartHolder = document.createElement('div');
     chartHolder.id = 'chart';
     element.appendChild(chartHolder);
