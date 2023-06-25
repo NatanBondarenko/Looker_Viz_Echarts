@@ -1,62 +1,90 @@
 looker.plugins.visualizations.add({
-  create: function(element, config) {
-    // Step 1) Load D3.js
-    var d3Script = document.createElement('script');
-    d3Script.src = 'https://d3js.org/d3.v6.min.js';
-    document.head.appendChild(d3Script);
-
-    // Step 2) Load billboard.js with style
-    var billboardScript = document.createElement('script');
-    billboardScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/billboard.js/1.14.4/billboard.min.js';
-    document.head.appendChild(billboardScript);
-
-    // Load billboard.css
-    var billboardCss = document.createElement('link');
-    billboardCss.rel = 'stylesheet';
-    billboardCss.href = 'https://cdnjs.cloudflare.com/ajax/libs/billboard.js/1.14.4/billboard.min.css';
-    document.head.appendChild(billboardCss);
-
-    // Step 3) Setup your chart holder
-    var chartHolder = document.createElement('div');
-    chartHolder.id = 'chart';
-    element.appendChild(chartHolder);
-
-    // Generate a chart with options
-    var chart = null;
-
-    // Return the visualization API methods
-    return {
-      updateAsync: function(data, element, config, queryResponse, details, done) {
-        if (!chart) {
-          // Create a new chart
-          chart = bb.generate({
-            bindto: '#chart',
-            data: {
-              columns: []
-            }
-          });
+  id: "hello_world_with_chart",
+  label: "Hello World with Chart",
+  options: {
+    font_size: {
+      type: "string",
+      label: "Font Size",
+      values: [
+        { "Large": "large" },
+        { "Small": "small" }
+      ],
+      display: "radio",
+      default: "large"
+    }
+  },
+  create: function (element, config) {
+    // Insert a <style> tag with some styles we'll use later.
+    element.innerHTML = `
+      <style>
+        .hello-world-vis {
+          /* Vertical centering */
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          text-align: center;
         }
+        .hello-world-text-large {
+          font-size: 72px;
+        }
+        .hello-world-text-small {
+          font-size: 18px;
+        }
+      </style>
+    `;
 
-        // Parse the Looker table data and format it for the chart
-        var formattedData = [];
-        var fields = queryResponse.fields.dimension_like.concat(queryResponse.fields.measure_like);
-        formattedData.push(fields.map(function(field) {
-          return field.label;
-        }));
-        formattedData = formattedData.concat(data.map(function(row) {
-          return fields.map(function(field) {
-            return row[field.name].value;
-          });
-        }));
+    // Create a container element to let us center the text.
+    var container = element.appendChild(document.createElement("div"));
+    container.className = "hello-world-vis";
 
-        // Update the chart with the new data
-        chart.load({
-          columns: formattedData
-        });
+    // Create an element to contain the text.
+    this._textElement = container.appendChild(document.createElement("div"));
 
-        // Signal to Looker that the update is complete
-        done();
+    // Create a chart holder element.
+    this._chartElement = container.appendChild(document.createElement("div"));
+    this._chartElement.id = "chart";
+  },
+  updateAsync: function (data, element, config, queryResponse, details, done) {
+    // Clear any errors from previous updates
+    this.clearErrors();
+
+    // Throw some errors and exit if the shape of the data isn't what this chart needs
+    if (queryResponse.fields.dimensions.length == 0) {
+      this.addError({ title: "No Dimensions", message: "This chart requires dimensions." });
+      return;
+    }
+
+    // Grab the first cell of the data
+    var firstRow = data[0];
+    var firstCell = firstRow[queryResponse.fields.dimensions[0].name];
+
+    // Insert the data into the page
+    this._textElement.innerHTML = LookerCharts.Utils.htmlForCell(firstCell);
+
+    // Set the size to the user-selected size
+    if (config.font_size == "small") {
+      this._textElement.className = "hello-world-text-small";
+    } else {
+      this._textElement.className = "hello-world-text-large";
+    }
+
+    // Prepare the data for the chart
+    var chartData = queryResponse.fields.dimensions.map(function (dimension) {
+      return [dimension.label].concat(data.map(function (row) {
+        return row[dimension.name].value;
+      }));
+    });
+
+    // Generate a chart with billboard.js
+    var chart = bb.generate({
+      bindto: '#chart',
+      data: {
+        columns: chartData
       }
-    };
+    });
+
+    // We are done rendering! Let Looker know.
+    done();
   }
 });
