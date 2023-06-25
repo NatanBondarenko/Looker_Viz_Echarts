@@ -35,6 +35,9 @@ looker.plugins.visualizations.add({
 
         // Call the drawChart function to initialize the chart with empty data
         drawChart(new google.visualization.DataTable());
+
+        // Store the drawChart function in a global variable
+        window.drawChart = drawChart;
       });
     };
 
@@ -61,7 +64,7 @@ looker.plugins.visualizations.add({
     dataTable.addRows(rows);
 
     // Call the drawChart function to update the chart
-    drawChart(dataTable);
+    window.drawChart(dataTable);
 
     // Signal the end of the update
     done();
