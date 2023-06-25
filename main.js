@@ -1,52 +1,46 @@
-looker.plugins.visualizations.add({
+import { Visualization } from '@looker/visualization-api';
+
+const vis = {
   id: 'my-google-pie-chart',
   label: 'My Google Pie Chart',
   options: {
     title: {
       label: 'Chart Title',
       type: 'string',
-      default: 'My Chart',
-    },
-    dimension: {
-      label: 'Dimension',
-      section: 'Data',
-      type: 'string',
-    },
-    measure: {
-      label: 'Measure',
-      section: 'Data',
-      type: 'string',
+      default: 'World Wide Wine Production',
     },
   },
   handleErrors: function (data, queryResponse) {
     return [];
   },
   create: function (element, config) {
-    element.innerHTML = '<div id="myChart"></div>';
+    element.innerHTML = '<div id="myChart" style="width:100%; max-width:600px; height:500px;"></div>';
   },
   updateAsync: function (data, element, config, queryResponse, details, done) {
-    var dimensionIndex = queryResponse.fields.dimensions.findIndex(function (field) {
-      return field.name === config.dimension;
-    });
-    var measureIndex = queryResponse.fields.measures.findIndex(function (field) {
-      return field.name === config.measure;
-    });
+    google.charts.load('current', { packages: ['corechart'] });
+    google.charts.setOnLoadCallback(drawChart);
 
-    var dataTable = new google.visualization.DataTable();
-    dataTable.addColumn('string', config.dimension);
-    dataTable.addColumn('number', config.measure);
+    function drawChart() {
+      var dataTable = new google.visualization.DataTable();
+      dataTable.addColumn('string', 'Country');
+      dataTable.addColumn('number', 'Mhl');
 
-    data.forEach(function (row) {
-      var dimensionValue = row[dimensionIndex].rendered || row[dimensionIndex].value;
-      var measureValue = parseFloat(row[measureIndex].value);
-      dataTable.addRow([dimensionValue, measureValue]);
-    });
+      data.forEach(function (row) {
+        var countryValue = row[0].value; // Assuming the first column in the data table represents the country
+        var mhlValue = parseFloat(row[1].value); // Assuming the second column in the data table represents the Mhl value
+        dataTable.addRow([countryValue, mhlValue]);
+      });
 
-    var chart = new google.visualization.PieChart(element.querySelector('#myChart'));
-    chart.draw(dataTable, {
-      title: config.title,
-    });
+      var options = {
+        title: config.title,
+      };
 
-    done();
+      var chart = new google.visualization.BarChart(element.querySelector('#myChart'));
+      chart.draw(dataTable, options);
+
+      done();
+    }
   },
-});
+};
+
+const googlePieChart = new Visualization(vis);
