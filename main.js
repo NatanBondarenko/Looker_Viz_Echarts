@@ -1,46 +1,58 @@
-import { Visualization } from '@looker/visualization-api';
-
-const vis = {
-  id: 'my-google-pie-chart',
-  label: 'My Google Pie Chart',
-  options: {
-    title: {
-      label: 'Chart Title',
-      type: 'string',
-      default: 'World Wide Wine Production',
-    },
-  },
-  handleErrors: function (data, queryResponse) {
-    return [];
-  },
+looker.plugins.visualizations.add({
   create: function (element, config) {
-    element.innerHTML = '<div id="myChart" style="width:100%; max-width:600px; height:500px;"></div>';
-  },
-  updateAsync: function (data, element, config, queryResponse, details, done) {
-    google.charts.load('current', { packages: ['corechart'] });
-    google.charts.setOnLoadCallback(drawChart);
+    // Add the Google Charts loader script
+    var script = document.createElement('script');
+    script.src = 'https://www.gstatic.com/charts/loader.js';
+    document.head.appendChild(script);
 
+    // Create a new <div> element to hold the chart
+    var chartDiv = document.createElement('div');
+    chartDiv.id = 'myChart';
+    chartDiv.style.maxWidth = '700px';
+    chartDiv.style.height = '400px';
+
+    // Append the chart <div> to the main element
+    element.appendChild(chartDiv);
+
+    // Define the callback function to be called when the Google Charts API is loaded
+    window.googleChartsCallback = function () {
+      google.charts.load('current', { packages: ['corechart'] });
+      google.charts.setOnLoadCallback(drawChart);
+    };
+
+    // Define the drawChart function
     function drawChart() {
-      var dataTable = new google.visualization.DataTable();
-      dataTable.addColumn('string', 'Country');
-      dataTable.addColumn('number', 'Mhl');
+      // Set the data
+      var data = google.visualization.arrayToDataTable([
+        ['Price', 'Size'],
+        [50, 7], [60, 8], [70, 8], [80, 9], [90, 9], [100, 9],
+        [110, 10], [120, 11], [130, 14], [140, 14], [150, 15]
+      ]);
 
-      data.forEach(function (row) {
-        var countryValue = row[0].value; // Assuming the first column in the data table represents the country
-        var mhlValue = parseFloat(row[1].value); // Assuming the second column in the data table represents the Mhl value
-        dataTable.addRow([countryValue, mhlValue]);
-      });
-
+      // Set the options
       var options = {
-        title: config.title,
+        title: 'House Prices vs Size',
+        hAxis: { title: 'Square Meters' },
+        vAxis: { title: 'Price in Millions' },
+        legend: 'none'
       };
 
-      var chart = new google.visualization.BarChart(element.querySelector('#myChart'));
-      chart.draw(dataTable, options);
-
-      done();
+      // Draw the chart
+      var chart = new google.visualization.LineChart(document.getElementById('myChart'));
+      chart.draw(data, options);
     }
-  },
-};
 
-const googlePieChart = new Visualization(vis);
+    // Load the Google Charts API
+    script.onload = function () {
+      google.charts.load('current', { packages: ['corechart'] });
+      google.charts.setOnLoadCallback(window.googleChartsCallback);
+    };
+  },
+  updateAsync: function (data, element, config, queryResponse, details, done) {
+    // Call the drawChart function to update the chart
+    window.googleChartsCallback();
+
+    // Signal the end of the update
+    done();
+  }
+});
