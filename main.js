@@ -17,23 +17,26 @@ looker.plugins.visualizations.add({
     // Define the callback function to be called when the Google Charts API is loaded
     window.googleChartsCallback = function () {
       google.charts.load('current', { packages: ['corechart'] });
-      google.charts.setOnLoadCallback(drawChart);
+      google.charts.setOnLoadCallback(function() {
+        // Define the drawChart function
+        function drawChart(dataTable) {
+          // Set the options
+          var options = {
+            title: 'House Prices vs Size',
+            hAxis: { title: 'Square Meters' },
+            vAxis: { title: 'Price in Millions' },
+            legend: 'none'
+          };
+
+          // Draw the chart
+          var chart = new google.visualization.LineChart(document.getElementById('myChart'));
+          chart.draw(dataTable, options);
+        }
+
+        // Call the drawChart function to initialize the chart with empty data
+        drawChart(new google.visualization.DataTable());
+      });
     };
-
-    // Define the drawChart function
-    function drawChart(dataTable) {
-      // Set the options
-      var options = {
-        title: 'House Prices vs Size',
-        hAxis: { title: 'Square Meters' },
-        vAxis: { title: 'Price in Millions' },
-        legend: 'none'
-      };
-
-      // Draw the chart
-      var chart = new google.visualization.LineChart(document.getElementById('myChart'));
-      chart.draw(dataTable, options);
-    }
 
     // Load the Google Charts API
     script.onload = function () {
