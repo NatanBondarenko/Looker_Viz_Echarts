@@ -102,17 +102,17 @@ looker.plugins.visualizations.add({
 
       if (!aggregatedData[yValue]) {
         yAxisData.push(yValue);
-        aggregatedData[yValue] = measureValue;
-      } else {
-        aggregatedData[yValue] += measureValue;
+        aggregatedData[yValue] = {};
       }
+
+      aggregatedData[yValue][row[dimensions[1].name].value] = measureValue;
     });
 
     // Prepare the series data from the aggregated measures
-    var seriesData = [];
-
-    yAxisData.forEach(function(yValue) {
-      seriesData.push([yValue, aggregatedData[yValue]]);
+    var seriesData = yAxisData.map(function(yValue) {
+      return xAxisData.map(function(xValue) {
+        return aggregatedData[yValue][xValue] || 0;
+      });
     });
 
     // Get the configured chart title, type, and label options
