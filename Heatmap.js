@@ -1,85 +1,86 @@
 looker.plugins.visualizations.add({
   create: function(element, config) {
-    // Create a container element for the chart
-    element.innerHTML = '<div id="main" style="width: 600px;height:400px;"></div>';
+    // Create a container element for the visualization
+    var container = element.appendChild(document.createElement("div"));
+    container.id = "myChart";
+    container.style.width = "600px";
+    container.style.height = "400px";
 
-    // Load ECharts library
-    var script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js';
-    script.onload = function() {
-      // Initialize the ECharts instance based on the prepared DOM
-      var myChart = echarts.init(document.getElementById('main'));
+    // Initialize the echarts instance based on the container element
+    var myChart = echarts.init(container);
 
-      // Fetch data from Looker API
-      looker.plugins.visualizations.dataSingleQuery({
-        format: 'json', // Set the desired format
-        query: 'SELECT hour, day, value FROM your_view', // Replace with your Looker query
-        // You can pass additional parameters like filters, dimensions, or measures as required
-        // filters: { ... },
-        // dimensions: { ... },
-        // measures: { ... },
-        // ...
-      }).then(function(data) {
-        // Process the data returned from the API into the format required by the chart
-        var chartData = data.map(function(item) {
-          return [item.hour.value, item.day.value, item.value.value || '-'];
-        });
+    return { myChart: myChart };
+  },
 
-        // Specify the configuration items and data for the chart
-        var option = {
-          tooltip: {
-            position: 'top'
+  updateAsync: function(data, element, config, queryResponse, details, done) {
+    // Access the echarts instance
+    var myChart = this.myChart;
+
+    // Process the Looker data into the format expected by the visualization
+    var hours = [];
+    var days = [];
+    var dataValues = [];
+
+    // Extract data from the Looker query response
+    data.forEach(function(row) {
+      hours.push(row.hour.value);
+      days.push(row.day.value);
+      dataValues.push([row.hour.value, row.day.value, row.value.value || "-"]);
+    });
+
+    // Specify the configuration options for the chart
+    var option = {
+      tooltip: {
+        position: "top"
+      },
+      grid: {
+        height: "50%",
+        top: "10%"
+      },
+      xAxis: {
+        type: "category",
+        data: hours,
+        splitArea: {
+          show: true
+        }
+      },
+      yAxis: {
+        type: "category",
+        data: days,
+        splitArea: {
+          show: true
+        }
+      },
+      visualMap: {
+        min: 0,
+        max: 10,
+        calculable: true,
+        orient: "horizontal",
+        left: "center",
+        bottom: "15%"
+      },
+      series: [
+        {
+          name: "Punch Card",
+          type: "heatmap",
+          data: dataValues,
+          label: {
+            show: true
           },
-          grid: {
-            height: '50%',
-            top: '10%'
-          },
-          xAxis: {
-            type: 'category',
-            data: hours,
-            splitArea: {
-              show: true
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 10,
+              shadowColor: "rgba(0, 0, 0, 0.5)"
             }
-          },
-          yAxis: {
-            type: 'category',
-            data: days,
-            splitArea: {
-              show: true
-            }
-          },
-          visualMap: {
-            min: 0,
-            max: 10,
-            calculable: true,
-            orient: 'horizontal',
-            left: 'center',
-            bottom: '15%'
-          },
-          series: [
-            {
-              name: 'Punch Card',
-              type: 'heatmap',
-              data: chartData,
-              label: {
-                show: true
-              },
-              emphasis: {
-                itemStyle: {
-                  shadowBlur: 10,
-                  shadowColor: 'rgba(0, 0, 0, 0.5)'
-                }
-              }
-            }
-          ]
-        };
-
-        // Display the chart using the configuration items and data
-        myChart.setOption(option);
-      });
+          }
+        }
+      ]
     };
 
-    // Append the ECharts script to the DOM
-    document.head.appendChild(script);
+    // Set the chart options and render the chart
+    myChart.setOption(option);
+
+    // Signal that the update is complete
+    done();
   }
 });
