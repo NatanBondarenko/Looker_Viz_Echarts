@@ -1,10 +1,17 @@
 looker.plugins.visualizations.add({
+  options: {
+    title: {
+      type: "string",
+      label: "Chart Title",
+      default: "ECharts Getting Started Example"
+    }
+  },
   create: function(element, config) {
     // Create a container element for the chart
     var container = element.appendChild(document.createElement("div"));
     container.id = "main";
-    container.style.width = "600px";
-    container.style.height = "400px";
+    container.style.width = "100%";
+    container.style.height = "100%";
   },
   updateAsync: function(data, element, config, queryResponse, details, done) {
     // Extract the dimensions and measures from the Looker query response
@@ -21,10 +28,13 @@ looker.plugins.visualizations.add({
       return row[measures[0].name].value;
     });
 
+    // Get the configured chart title
+    var chartTitle = config.title;
+
     // Specify the configuration items for the chart
     var option = {
       title: {
-        text: "ECharts Getting Started Example"
+        text: chartTitle
       },
       tooltip: {},
       legend: {
@@ -45,6 +55,11 @@ looker.plugins.visualizations.add({
 
     // Initialize the echarts instance based on the container element
     var myChart = echarts.init(document.getElementById("main"));
+
+    // Set responsive configuration
+    window.addEventListener("resize", function() {
+      myChart.resize();
+    });
 
     // Update the chart with the new configuration and data
     myChart.setOption(option);
