@@ -7,24 +7,38 @@ looker.plugins.visualizations.add({
     container.style.height = "400px";
   },
   update: function(data, element, config, queryResponse) {
-    // Specify the configuration items and data for the chart
+    // Extract the dimensions and measures from the Looker query response
+    var dimensions = queryResponse.fields.dimension_like;
+    var measures = queryResponse.fields.measure_like;
+
+    // Prepare the x-axis data from the first dimension
+    var xAxisData = data.map(function(row) {
+      return row[dimensions[0].name].value;
+    });
+
+    // Prepare the series data from the first measure
+    var seriesData = data.map(function(row) {
+      return row[measures[0].name].value;
+    });
+
+    // Specify the configuration items for the chart
     var option = {
       title: {
         text: "ECharts Getting Started Example"
       },
       tooltip: {},
       legend: {
-        data: ["sales"]
+        data: [measures[0].label]
       },
       xAxis: {
-        data: ["Shirts", "Cardigans", "Chiffons", "Pants", "Heels", "Socks"]
+        data: xAxisData
       },
       yAxis: {},
       series: [
         {
-          name: "sales",
+          name: measures[0].label,
           type: "bar",
-          data: [5, 20, 36, 10, 10, 20]
+          data: seriesData
         }
       ]
     };
