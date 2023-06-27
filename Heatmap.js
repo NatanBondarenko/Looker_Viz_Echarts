@@ -50,32 +50,54 @@ looker.plugins.visualizations.add({
     var showLabel = config.showLabel;
     var labelFontSize = config.labelFontSize;
 
-    // Specify the configuration items for the chart
-    var option = {
-      title: {
-        text: chartTitle
-      },
-      tooltip: {},
-      xAxis: {
-        data: xAxisData
-      },
-      yAxis: {
-        data: yAxisData
-      },
-      series: [
-        {
-          name: measures[0].label,
-          type: "heatmap",
-          data: seriesData,
-          label: {
-            show: showLabel,
-            textStyle: {
-              fontSize: labelFontSize
-            }
-          }
+// Specify the configuration items for the chart
+var option = {
+  title: {
+    text: chartTitle
+  },
+  tooltip: {
+    formatter: function(params) {
+      return (
+        xAxisData[params.data[0]] +
+        " - " +
+        yAxisData[params.data[1]] +
+        ": " +
+        params.data[2]
+      );
+    }
+  },
+  xAxis: {
+    type: "category",
+    data: xAxisData
+  },
+  yAxis: {
+    type: "category",
+    data: yAxisData
+  },
+  visualMap: {
+    min: Math.min(...seriesData),
+    max: Math.max(...seriesData),
+    calculable: true,
+    orient: "horizontal",
+    left: "center",
+    bottom: 10
+  },
+  series: [
+    {
+      name: measures[0].label,
+      type: "heatmap",
+      data: seriesData,
+      label: {
+        show: true,
+        color: "black",
+        fontSize: labelFontSize,
+        formatter: function(params) {
+          return params.value[2];
         }
-      ]
-    };
+      }
+    }
+  ]
+};
 
     // Initialize the echarts instance based on the container element
     var myChart = echarts.init(document.getElementById("main"));
