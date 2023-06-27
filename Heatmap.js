@@ -1,86 +1,94 @@
 looker.plugins.visualizations.add({
+  options: {
+    title: {
+      type: "string",
+      label: "Chart Title",
+      default: "Heatmap Chart"
+    },
+    showLabel: {
+      type: "boolean",
+      label: "Show Label",
+      default: true
+    },
+    labelFontSize: {
+      type: "number",
+      label: "Label Font Size",
+      default: 12
+    }
+  },
+
   create: function(element, config) {
-    // Create a container element for the visualization
+    // Create a container element for the chart
     var container = element.appendChild(document.createElement("div"));
-    container.id = "myChart";
-    container.style.width = "600px";
-    container.style.height = "400px";
-
-    // Initialize the echarts instance based on the container element
-    var myChart = echarts.init(container);
-
-    return { myChart: myChart };
+    container.id = "main";
+    container.style.width = "100%";
+    container.style.height = "100%";
   },
 
   updateAsync: function(data, element, config, queryResponse, details, done) {
-    // Access the echarts instance
-    var myChart = this.myChart;
+    // Extract the dimensions and measures from the Looker query response
+    var dimensions = queryResponse.fields.dimension_like;
+    var measures = queryResponse.fields.measure_like;
 
-    // Process the Looker data into the format expected by the visualization
-    var hours = [];
-    var days = [];
-    var dataValues = [];
-
-    // Extract data from the Looker query response
-    data.forEach(function(row) {
-      hours.push(row.hour.value);
-      days.push(row.day.value);
-      dataValues.push([row.hour.value, row.day.value, row.value.value || "-"]);
+    // Prepare the x-axis data from the first dimension
+    var xAxisData = data.map(function(row) {
+      return row[dimensions[0].name].value;
     });
 
-    // Specify the configuration options for the chart
+    // Prepare the y-axis data from the second dimension
+    var yAxisData = data.map(function(row) {
+      return row[dimensions[1].name].value;
+    });
+
+    // Prepare the series data from the measure
+    var seriesData = data.map(function(row) {
+      return row[measures[0].name].value;
+    });
+
+    // Get the configured chart title and show label option
+    var chartTitle = config.title;
+    var showLabel = config.showLabel;
+    var labelFontSize = config.labelFontSize;
+
+    // Specify the configuration items for the chart
     var option = {
-      tooltip: {
-        position: "top"
+      title: {
+        text: chartTitle
       },
-      grid: {
-        height: "50%",
-        top: "10%"
-      },
+      tooltip: {},
       xAxis: {
-        type: "category",
-        data: hours,
-        splitArea: {
-          show: true
-        }
+        data: xAxisData
       },
       yAxis: {
-        type: "category",
-        data: days,
-        splitArea: {
-          show: true
-        }
-      },
-      visualMap: {
-        min: 0,
-        max: 10,
-        calculable: true,
-        orient: "horizontal",
-        left: "center",
-        bottom: "15%"
+        data: yAxisData
       },
       series: [
         {
-          name: "Punch Card",
+          name: measures[0].label,
           type: "heatmap",
-          data: dataValues,
+          data: seriesData,
           label: {
-            show: true
-          },
-          emphasis: {
-            itemStyle: {
-              shadowBlur: 10,
-              shadowColor: "rgba(0, 0, 0, 0.5)"
+            show: showLabel,
+            textStyle: {
+              fontSize: labelFontSize
             }
           }
         }
       ]
     };
 
-    // Set the chart options and render the chart
+    // Initialize the echarts instance based on the container element
+    var myChart = echarts.init(document.getElementById("main"));
+
+    // Set responsive configuration
+    window.addEventListener("resize", function() {
+      myChart.resize();
+    });
+
+    // Update the chart with the new configuration and data
     myChart.setOption(option);
 
-    // Signal that the update is complete
+    // Signal to Looker that the update is complete
     done();
   }
 });
