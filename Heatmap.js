@@ -32,17 +32,33 @@ updateAsync: function(data, element, config, queryResponse, details, done) {
 
   // Prepare the x-axis and y-axis data from the dimensions
   var xAxisData = data.map(function(row) {
-    return row[dimensions[0].name].value;
-  });
-
-  var yAxisData = data.map(function(row) {
     return row[dimensions[1].name].value;
   });
 
-  // Prepare the series data as a matrix
-  var seriesData = data.map(function(row) {
-    return [row[dimensions[0].name].value, row[dimensions[1].name].value, row[measures[0].name].value];
+  var uniqueYAxisData = Array.from(new Set(xAxisData)); // Get unique y-axis values
+
+  var yAxisData = data.map(function(row) {
+    return row[dimensions[0].name].value;
   });
+
+  var uniqueYAxisData = Array.from(new Set(yAxisData)); // Get unique y-axis values
+
+  // Prepare the series data as a matrix
+  var seriesData = [];
+  for (var i = 0; i < uniqueYAxisData.length; i++) {
+    var yValue = uniqueYAxisData[i];
+    var seriesItem = {
+      name: yValue,
+      type: "heatmap",
+      data: []
+    };
+    for (var j = 0; j < xAxisData.length; j++) {
+      if (yAxisData[j] === yValue) {
+        seriesItem.data.push([xAxisData[j], yValue, data[j][measures[0].name].value]);
+      }
+    }
+    seriesData.push(seriesItem);
+  }
 
   // Get the configured chart title, label options, and color options
   var chartTitle = config.title;
@@ -70,34 +86,17 @@ updateAsync: function(data, element, config, queryResponse, details, done) {
     },
     yAxis: {
       type: "category",
-      data: yAxisData
+      data: uniqueYAxisData
     },
     visualMap: {
-      min: Math.min(...seriesData.map(function(item) { return item[2]; })),
-      max: Math.max(...seriesData.map(function(item) { return item[2]; })),
+      min: Math.min(...seriesData.map(function(item) { return item.data; }).flat().map(function(item) { return item[2]; })),
+      max: Math.max(...seriesData.map(function(item) { return item.data; }).flat().map(function(item) { return item[2]; })),
       calculable: true,
       orient: "vertical",
       left: 10,
       top: "middle"
     },
-    series: [{
-      name: measures[0].label,
-      type: "heatmap",
-      data: seriesData,
-      label: {
-        show: showLabel,
-        position: labelPosition,
-        textStyle: {
-          fontSize: labelFontSize
-        }
-      },
-      emphasis: {
-        itemStyle: {
-          shadowBlur: 10,
-          shadowColor: "rgba(0, 0, 0, 0.5)"
-        }
-      }
-    }],
+    series: seriesData,
     color: colorScheme
   };
 
