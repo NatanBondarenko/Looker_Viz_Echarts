@@ -6,7 +6,7 @@ looker.plugins.visualizations.add({
     container.style.width = "600px";
     container.style.height = "400px";
   },
-  update: function(data, element, config, queryResponse) {
+  updateAsync: function(data, element, config, queryResponse, details, done) {
     // Extract the dimensions and measures from the Looker query response
     var dimensions = queryResponse.fields.dimension_like;
     var measures = queryResponse.fields.measure_like;
@@ -48,5 +48,8 @@ looker.plugins.visualizations.add({
 
     // Update the chart with the new configuration and data
     myChart.setOption(option);
+
+    // Signal to Looker that the update is complete
+    done();
   }
 });
