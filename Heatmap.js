@@ -1,21 +1,87 @@
 looker.plugins.visualizations.add({
   options: {
-    title: {
-      type: "string",
-      label: "Chart Title",
-      default: "Heatmap Chart"
-    },
-    showLabel: {
-      type: "boolean",
-      label: "Show Label",
-      default: true
-    },
-    labelFontSize: {
-      type: "number",
-      label: "Label Font Size",
-      default: 12
-    }
+  title: {
+    type: "string",
+    label: "Chart Title",
+    default: "ECharts Heatmap Example"
   },
+  chartType: {
+    type: "string",
+    label: "Chart Type",
+    display: "select",
+    values: [
+      { "Heatmap": "heatmap" },
+      { "Bar": "bar" },
+      { "Line": "line" },
+      { "Scatter": "scatter" }
+    ],
+    default: "heatmap"
+  },
+  showLabel: {
+    type: "boolean",
+    label: "Show Label",
+    default: true
+  },
+  labelPosition: {
+    type: "string",
+    label: "Label Position",
+    display: "select",
+    values: [
+      { "Top": "top" },
+      { "Right": "right" },
+      { "Bottom": "bottom" },
+      { "Left": "left" }
+    ],
+    default: "bottom"
+  },
+  labelFontSize: {
+    type: "number",
+    label: "Label Font Size",
+    default: 12
+  },
+  visualMap: {
+    section: "Heatmap Settings",
+    type: "object",
+    label: "Visual Map",
+    options: {
+      min: {
+        type: "number",
+        label: "Min Value",
+        default: 0
+      },
+      max: {
+        type: "number",
+        label: "Max Value",
+        default: 10
+      },
+      calculable: {
+        type: "boolean",
+        label: "Calculable",
+        default: true
+      },
+      orient: {
+        type: "string",
+        label: "Orientation",
+        display: "select",
+        values: [
+          { "Horizontal": "horizontal" },
+          { "Vertical": "vertical" }
+        ],
+        default: "horizontal"
+      },
+      left: {
+        type: "string",
+        label: "Left Position",
+        default: "center"
+      },
+      bottom: {
+        type: "string",
+        label: "Bottom Position",
+        default: "15%"
+      }
+    }
+  }
+},
 
   create: function(element, config) {
     // Create a container element for the chart
