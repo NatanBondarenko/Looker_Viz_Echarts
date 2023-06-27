@@ -39,47 +39,40 @@ looker.plugins.visualizations.add({
       label: "Label Font Size",
       default: 12
     },
-    visualMap: {
-      section: "Heatmap Settings",
-      type: "object",
-      label: "Visual Map",
-      options: {
-        min: {
-          type: "number",
-          label: "Min Value",
-          default: 0
-        },
-        max: {
-          type: "number",
-          label: "Max Value",
-          default: 10
-        },
-        calculable: {
-          type: "boolean",
-          label: "Calculable",
-          default: true
-        },
-        orient: {
-          type: "string",
-          label: "Orientation",
-          display: "select",
-          values: [
-            { "Horizontal": "horizontal" },
-            { "Vertical": "vertical" }
-          ],
-          default: "horizontal"
-        },
-        left: {
-          type: "string",
-          label: "Left Position",
-          default: "center"
-        },
-        bottom: {
-          type: "string",
-          label: "Bottom Position",
-          default: "15%"
-        }
-      }
+    visualMapMin: {
+      type: "number",
+      label: "Visual Map Min Value",
+      default: 0
+    },
+    visualMapMax: {
+      type: "number",
+      label: "Visual Map Max Value",
+      default: 10
+    },
+    visualMapCalculable: {
+      type: "boolean",
+      label: "Visual Map Calculable",
+      default: true
+    },
+    visualMapOrient: {
+      type: "string",
+      label: "Visual Map Orientation",
+      display: "select",
+      values: [
+        { "Horizontal": "horizontal" },
+        { "Vertical": "vertical" }
+      ],
+      default: "horizontal"
+    },
+    visualMapLeft: {
+      type: "string",
+      label: "Visual Map Left Position",
+      default: "center"
+    },
+    visualMapBottom: {
+      type: "string",
+      label: "Visual Map Bottom Position",
+      default: "15%"
     }
   },
   create: function(element, config) {
@@ -94,19 +87,32 @@ looker.plugins.visualizations.add({
     var dimensions = queryResponse.fields.dimension_like;
     var measures = queryResponse.fields.measure_like;
 
-    // Prepare the x-axis data from the first dimension
+    // Prepare the x-axis data from the second dimension
     var xAxisData = data.map(function(row) {
       return row[dimensions[1].name].value;
     });
 
-    // Prepare the y-axis data from the second dimension
-    var yAxisData = data.map(function(row) {
-      return row[dimensions[0].name].value;
+    // Prepare the y-axis data from the first dimension and aggregate the measures
+    var yAxisData = [];
+    var aggregatedData = {};
+
+    data.forEach(function(row) {
+      var yValue = row[dimensions[0].name].value;
+      var measureValue = row[measures[0].name].value;
+
+      if (!aggregatedData[yValue]) {
+        yAxisData.push(yValue);
+        aggregatedData[yValue] = measureValue;
+      } else {
+        aggregatedData[yValue] += measureValue;
+      }
     });
 
-    // Prepare the series data from the first measure
-    var seriesData = data.map(function(row) {
-      return row[measures[0].name].value;
+    // Prepare the series data from the aggregated measures
+    var seriesData = [];
+
+    yAxisData.forEach(function(yValue) {
+      seriesData.push([yValue, aggregatedData[yValue]]);
     });
 
     // Get the configured chart title, type, and label options
@@ -117,12 +123,12 @@ looker.plugins.visualizations.add({
     var labelFontSize = config.labelFontSize;
 
     // Get the configured visualMap options
-    var visualMapMin = config.visualMap.min;
-    var visualMapMax = config.visualMap.max;
-    var visualMapCalculable = config.visualMap.calculable;
-    var visualMapOrient = config.visualMap.orient;
-    var visualMapLeft = config.visualMap.left;
-    var visualMapBottom = config.visualMap.bottom;
+    var visualMapMin = config.visualMapMin;
+    var visualMapMax = config.visualMapMax;
+    var visualMapCalculable = config.visualMapCalculable;
+    var visualMapOrient = config.visualMapOrient;
+    var visualMapLeft = config.visualMapLeft;
+    var visualMapBottom = config.visualMapBottom;
 
     // Specify the configuration items for the chart
     var option = {
