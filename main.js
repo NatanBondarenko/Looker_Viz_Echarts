@@ -4,6 +4,39 @@ looker.plugins.visualizations.add({
       type: "string",
       label: "Chart Title",
       default: "ECharts Getting Started Example"
+    },
+    chartType: {
+      type: "string",
+      label: "Chart Type",
+      display: "select",
+      values: [
+        { "Bar": "bar" },
+        { "Line": "line" },
+        { "Scatter": "scatter" }
+      ],
+      default: "bar"
+    },
+    showLabel: {
+      type: "boolean",
+      label: "Show Label",
+      default: true
+    },
+    labelPosition: {
+      type: "string",
+      label: "Label Position",
+      display: "select",
+      values: [
+        { "Top": "top" },
+        { "Right": "right" },
+        { "Bottom": "bottom" },
+        { "Left": "left" }
+      ],
+      default: "bottom"
+    },
+    labelFontSize: {
+      type: "number",
+      label: "Label Font Size",
+      default: 20
     }
   },
   create: function(element, config) {
@@ -28,8 +61,12 @@ looker.plugins.visualizations.add({
       return row[measures[0].name].value;
     });
 
-    // Get the configured chart title
+    // Get the configured chart title, type, and label options
     var chartTitle = config.title;
+    var chartType = config.chartType;
+    var showLabel = config.showLabel;
+    var labelPosition = config.labelPosition;
+    var labelFontSize = config.labelFontSize;
 
     // Specify the configuration items for the chart
     var option = {
@@ -47,8 +84,15 @@ looker.plugins.visualizations.add({
       series: [
         {
           name: measures[0].label,
-          type: "bar",
-          data: seriesData
+          type: chartType,
+          data: seriesData,
+          label: {
+            show: showLabel,
+            position: labelPosition,
+            textStyle: {
+              fontSize: labelFontSize
+            }
+          }
         }
       ]
     };
